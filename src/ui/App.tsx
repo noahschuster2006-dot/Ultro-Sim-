@@ -17,7 +17,7 @@ import { Stage } from './scene/Stage';
 import { APP_BY_ID, type AppId } from './phone/apps';
 import { HomeScreen } from './phone/HomeScreen';
 import { Memorial } from './phone/Memorial';
-import { AppHeader, Banner, ControlBar, EventSheet } from './phone/Overlays';
+import { AppHeader, Banner, ControlBar, EventSheet, NewsTicker } from './phone/Overlays';
 import { Phone, StatusBar } from './phone/Phone';
 import { HallScreen, LockScreen, NewLifeScreen } from './phone/Setup';
 import { wallpaper } from './phone/wallpaper';
@@ -72,6 +72,7 @@ export function App() {
   const [app, setApp] = useState<AppId | null>(null);
   const [, setTick] = useState(0);
   const [note, setNote] = useState<Note | null>(null);
+  const [news, setNews] = useState<{ headlines: string[]; key: number } | null>(null);
   const [playing, setPlaying] = useState<SceneId | null>(null);
   const prefs = usePrefs();
   const musicState = useMusicState();
@@ -202,7 +203,14 @@ export function App() {
     sfx.play('ageUp');
     setApp(null);
     const ev = s.phase === 'alive' ? currentEvent(s) : null;
-    playYear(s, s.char.log.slice(before), !!ev);
+    const fresh = s.char.log.slice(before);
+    playYear(s, fresh, !!ev);
+    // World news is only logged when it hits the home country (or the whole world): run it as breaking news.
+    const headlines = fresh.filter((e) => e.tone === 'world').map((e) => e.text.replace(/^🌍\s*/, ''));
+    if (headlines.length) {
+      setNews({ headlines, key: Date.now() });
+      sfx.play('sting');
+    }
     refresh();
   };
 
@@ -286,7 +294,7 @@ export function App() {
   const onWallpaper = screen === 'lock' || (screen === 'game' && !!s && alive && !openDef);
 
   return (
-    <div className={`world ${playing ? 'scene-on' : ''} ${prefs.reducedMotion ? 'calm' : ''}`}>
+    <div className={`game-world ${playing ? 'scene-on' : ''} ${prefs.reducedMotion ? 'calm' : ''}`}>
       <Stage env={env} phoneEl={phoneRef} />
       <div className="vignette" aria-hidden />
       <Phone
@@ -297,6 +305,8 @@ export function App() {
         overlay={
           <>
             {ev && <EventSheet ev={ev} s={s!} queued={s!.queue.length} onChoose={onChoose} />}
+            {/* Held back while the phone is lowered for a scene, so the headline is never missed. */}
+            {news && screen === 'game' && alive && !dip && <NewsTicker key={news.key} headlines={news.headlines} onDone={() => setNews(null)} />}
             {note && <Banner key={note.key} app={note.icon} title={note.title} text={note.text} onClose={() => setNote(null)} />}
             {dip && small && (
               <button className="dip-catch" onClick={() => sceneBus.skip()} aria-label="Skip animation">

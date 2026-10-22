@@ -206,14 +206,24 @@ export interface ActionView {
   amount?: boolean;
 }
 
+/** Reasons that only mean "you are too young (or old) for this": such actions are hidden, not shown disabled. */
+const AGE_LOCK = /^(too young|too old|adults only|kids only|age \d+\+)/i;
+
+export function isAgeLocked(reason: string | undefined): boolean {
+  return !!reason && AGE_LOCK.test(reason);
+}
+
 export function viewActions(s: GameState, cat: ActionCat, arg?: string): ActionView[] {
   const x = new Ctx(s);
   const out: ActionView[] = [];
   for (const a of ACTIONS) {
     if (a.cat !== cat) continue;
     const av = a.avail ? a.avail(x, arg) : true;
-    if (av === false) continue;
+    if (av === false || (typeof av === 'string' && isAgeLocked(av))) continue;
     const apOk = x.c.ap >= a.ap;
+    const options = a.options ? a.options(x, arg).filter((o) => !isAgeLocked(o.disabled)) : undefined;
+    // Every choice is age-locked: hide the whole action.
+    if (options && options.length === 0) continue;
     out.push({
       id: a.id,
       cat: a.cat,
@@ -223,7 +233,7 @@ export function viewActions(s: GameState, cat: ActionCat, arg?: string): ActionV
       ap: a.ap,
       enabled: av === true && apOk && s.phase === 'alive' && !s.queue.length,
       reason: av !== true ? av : !apOk ? 'No actions left this year' : undefined,
-      options: a.options ? a.options(x, arg) : undefined,
+      options,
       amount: a.amount,
     });
   }

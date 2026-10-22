@@ -517,7 +517,7 @@ table.data th {
 }
 
 /* ================================================================ the world behind the phone */
-.world {
+.game-world {
   position: fixed;
   inset: 0;
   /* clip, not hidden: focus and scrollIntoView must never scroll the world. */
@@ -536,7 +536,7 @@ table.data th {
   transition: filter 0.7s ease, transform 1.2s ease;
 }
 
-.world.scene-on .stage {
+.game-world.scene-on .stage {
   filter: none;
   transform: scale(1);
 }
@@ -549,7 +549,7 @@ table.data th {
   transition: opacity 0.7s ease;
 }
 
-.world.scene-on .vignette {
+.game-world.scene-on .vignette {
   opacity: 0.4;
 }
 
@@ -569,7 +569,7 @@ table.data th {
   transform: translate(-50%, -47%) rotateX(7deg) scale(0.97);
 }
 
-.world.calm .phone-wrap {
+.game-world.calm .phone-wrap {
   transition-duration: 0.3s;
 }
 
@@ -905,6 +905,7 @@ table.data th {
   margin-top: auto;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
+  justify-content: center;
   gap: 8px;
   padding: 12px 10px 10px;
   border-radius: 28px;
@@ -1942,4 +1943,96 @@ table.data th {
   width: 34px;
   height: 34px;
   border-radius: 10px;
+}
+
+/* ---------------------------------------------------------------- breaking news ticker */
+.news-ticker {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 74px;
+  z-index: 70;
+  display: flex;
+  align-items: stretch;
+  height: 30px;
+  overflow: hidden;
+  background: linear-gradient(#0d1a3a, #07102a);
+  border-top: 2px solid #e32636;
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  animation: tickerIn 0.4s cubic-bezier(0.2, 1, 0.3, 1), tickerOut 0.4s ease calc(var(--ticker-secs) + 0.4s) forwards;
+}
+
+.news-label {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  background: #e32636;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+  padding-right: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.news-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+  animation: newsBlink 1s steps(2, start) infinite;
+}
+
+.news-track {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.news-text {
+  position: absolute;
+  left: 0;
+  white-space: nowrap;
+  font-weight: 600;
+  animation: tickerScroll var(--ticker-secs) linear 0.3s both;
+}
+
+@keyframes tickerScroll {
+  from {
+    transform: translateX(var(--ticker-w, 340px));
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes tickerIn {
+  from {
+    transform: translateY(110%);
+  }
+}
+
+@keyframes tickerOut {
+  to {
+    transform: translateY(110%);
+    opacity: 0;
+  }
+}
+
+@keyframes newsBlink {
+  to {
+    visibility: hidden;
+  }
+}
+
+.game-world.calm .news-text {
+  animation-timing-function: linear;
 }

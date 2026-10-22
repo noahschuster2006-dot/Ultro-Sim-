@@ -2,7 +2,7 @@ import { Ctx, fmtMoney, STAGE_NAMES, type GameState } from '../../engine';
 import { currentTitle } from '../../engine/systems/careers';
 import { eraOf } from '../../engine/data/eras';
 import { Avatar, playerSpec } from '../art/Avatar';
-import { APPS, AppIcon, DOCK, type AppDef, type AppId } from './apps';
+import { APPS, AppIcon, appVisible, DOCK, type AppDef, type AppId } from './apps';
 import { yearLabel } from './Phone';
 
 function Ring({ value, label, color }: { value: number; label: string; color: string }) {
@@ -35,7 +35,8 @@ export function HomeScreen({ s, onOpen }: { s: GameState; onOpen: (id: AppId) =>
   const x = new Ctx(s);
   const c = s.char;
   const st = c.stats;
-  const grid = APPS.filter((a) => !DOCK.includes(a.id));
+  const grid = APPS.filter((a) => !DOCK.includes(a.id) && appVisible(a, c.age));
+  const dock = DOCK.map((id) => APPS.find((p) => p.id === id)!).filter((a) => appVisible(a, c.age));
   return (
     <div className="home">
       <div className="widget profile" onClick={() => onOpen('stats')} role="button" tabIndex={0} aria-label="Your profile">
@@ -68,11 +69,10 @@ export function HomeScreen({ s, onOpen }: { s: GameState; onOpen: (id: AppId) =>
           <Tile key={a.id} app={a} s={s} onOpen={onOpen} />
         ))}
       </div>
-      <div className="dock">
-        {DOCK.map((id) => {
-          const a = APPS.find((p) => p.id === id)!;
-          return <Tile key={id} app={a} s={s} onOpen={onOpen} />;
-        })}
+      <div className="dock" style={dock.length < 4 ? { gridTemplateColumns: `repeat(${dock.length}, 72px)` } : undefined}>
+        {dock.map((a) => (
+          <Tile key={a.id} app={a} s={s} onOpen={onOpen} />
+        ))}
       </div>
     </div>
   );

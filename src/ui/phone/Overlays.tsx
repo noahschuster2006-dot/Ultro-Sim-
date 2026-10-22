@@ -1,5 +1,5 @@
 import { ChevronLeft, LayoutGrid } from 'lucide-react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import type { EventView, GameState } from '../../engine';
 import { Avatar, npcSpec } from '../art/Avatar';
 import { PetAvatar } from '../art/PetAvatar';
@@ -148,6 +148,24 @@ export function ControlBar({ s, onHome, onAgeUp, atHome }: { s: GameState; onHom
         {Array.from({ length: c.apMax }, (_, i) => (
           <i key={i} className={i < c.ap ? '' : 'used'} />
         ))}
+      </span>
+    </div>
+  );
+}
+
+/** A news-broadcast ticker that slides across the bottom of the phone when big news breaks at home. */
+export function NewsTicker({ headlines, onDone }: { headlines: string[]; onDone: () => void }) {
+  const text = headlines.join('   •   ');
+  // Long headlines scroll for longer, so every word gets read.
+  const secs = Math.max(7, Math.min(22, 4 + text.length / 11));
+  return (
+    <div className="news-ticker" role="status" aria-live="polite" style={{ '--ticker-secs': `${secs}s` } as CSSProperties} onAnimationEnd={(e) => e.animationName === 'tickerOut' && onDone()} onClick={onDone}>
+      <span className="news-label">
+        <span className="news-dot" aria-hidden />
+        BREAKING NEWS
+      </span>
+      <span className="news-track">
+        <span className="news-text">{text}</span>
       </span>
     </div>
   );
